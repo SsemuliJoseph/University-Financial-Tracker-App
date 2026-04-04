@@ -13,6 +13,21 @@ session_start();
 // We include the database file so we can test the connection below.
 // require_once ensures the file is included only once to prevent 'function already declared' errors.
 require_once 'config/database.php';
+require_once 'models/User.php';
+
+// Auto-login Remember Me check
+if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_me'])) {
+    $db = getConnection();
+    $userModel = new User($db);
+    $user = $userModel->getByRememberToken($_COOKIE['remember_me']);
+    if ($user) {
+        $_SESSION['user_id'] = $user['user_id'];
+        $_SESSION['name'] = $user['name'];
+        $_SESSION['role'] = $user['role'];
+        if (isset($user['currency'])) $_SESSION['currency'] = $user['currency'];
+        $_SESSION['avatar'] = $user['avatar'] ?? null;
+    }
+}
 
 // A simple router mechanism to figure out what page the user wants.
 // $_GET is a superglobal array that collects data sent in the URL (e.g., ?page=login)
@@ -36,6 +51,12 @@ switch ($page) {
         break;
 
     // ----- ADD THE REGISTER ROUTE -----
+    case 'profile':
+        require_once 'controllers/AuthController.php';
+        $authController = new AuthController();
+        $authController->profile();
+        break;
+
     case 'register':
         require_once 'controllers/AuthController.php';
         $authController = new AuthController();
@@ -140,6 +161,13 @@ switch ($page) {
         $notificationController->handleRequest();
         break;
 
+    // ----- INSIGHTS ROUTE -----
+    case 'insights':
+        require_once 'controllers/InsightController.php';
+        $insightController = new InsightController();
+        $insightController->index();
+        break;
+
     // ----- FINANCE OFFICER REPORTS ROUTE -----
     case 'finance_reports':
         require_once 'controllers/FinanceController.php';
@@ -156,6 +184,18 @@ switch ($page) {
 
     // ----- LOGOUT & FULL SESSION DESTRUCTION ROUTE -----
     case 'logout':
+        // Clear remember token in DB if possible
+        if (isset($_SESSION['user_id'])) {
+            require_once 'config/database.php';
+            require_once 'models/User.php';
+            $u = new User(getConnection());
+            $u->updateRememberToken($_SESSION['user_id'], null);
+        }
+        // Clear remember cookie
+        if (isset($_COOKIE['remember_me'])) {
+            setcookie('remember_me', '', time() - 3600, '/');
+        }
+        
         // Destroy the session variables
         $_SESSION = array();
 
