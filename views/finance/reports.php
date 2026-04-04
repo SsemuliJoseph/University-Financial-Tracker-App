@@ -59,7 +59,7 @@
                                     </td>
                                     <td>
                                         <span class="<?= $t['type'] === 'income' ? 'text-success' : 'text-danger' ?>">
-                                            <?= $t['type'] === 'income' ? '+' : '-' ?> Rs. <?= number_format($t['amount'], 2) ?>
+                                            <?= $t['type'] === 'income' ? '+' : '-' ?> UGX <?= number_format($t['amount'], 2) ?>
                                         </span>
                                     </td>
                                 </tr>

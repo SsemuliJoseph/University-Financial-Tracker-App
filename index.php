@@ -26,7 +26,7 @@ switch ($page) {
         echo "<p>Your entry point is working successfully.</p>";
         echo "<a href='index.php?page=test_db'>Test Database Connection</a>";
         break;
-        
+
     case 'test_db':
         // Let's test if our connection works!
         $db = getConnection();
@@ -35,13 +35,13 @@ switch ($page) {
         echo "<a href='index.php'>Go Back Home</a>";
         break;
 
-          // ----- ADD THE REGISTER ROUTE -----
+    // ----- ADD THE REGISTER ROUTE -----
     case 'register':
         require_once 'controllers/AuthController.php';
         $authController = new AuthController();
         $authController->register(); // Call the logic we wrote above
         break;
-        
+
     // ----- ADD THE LOGIN ROUTE -----
     case 'login':
         require_once 'controllers/AuthController.php';
@@ -71,6 +71,20 @@ switch ($page) {
         break;
 
     // ----- DELETE TRANSACTION ROUTE -----
+    // ----- BULK DELETE ROUTE -----
+    case 'transactions_bulk_delete':
+        require_once 'controllers/TransactionController.php';
+        $transactionController = new TransactionController();
+        $transactionController->bulkDelete();
+        break;
+
+    // ----- CSV EXPORT ROUTE -----
+    case 'transactions_export':
+        require_once 'controllers/TransactionController.php';
+        $transactionController = new TransactionController();
+        $transactionController->exportCsv();
+        break;
+
     case 'transaction_delete':
         require_once 'controllers/TransactionController.php';
         $transactionController = new TransactionController();
@@ -92,6 +106,13 @@ switch ($page) {
         break;
 
     // ----- REPORTS ROUTE -----
+    // ----- REPORT EXPORT ROUTE -----
+    case 'reports_export':
+        require_once 'controllers/ReportController.php';
+        $reportController = new ReportController();
+        $reportController->export();
+        break;
+
     case 'reports':
         require_once 'controllers/ReportController.php';
         $reportController = new ReportController();
@@ -110,6 +131,13 @@ switch ($page) {
         require_once 'controllers/AdminController.php';
         $adminController = new AdminController();
         $adminController->deleteUser();
+        break;
+
+    // ----- NOTIFICATIONS ROUTE -----
+    case 'notifications':
+        require_once 'controllers/NotificationController.php';
+        $notificationController = new NotificationController();
+        $notificationController->handleRequest();
         break;
 
     // ----- FINANCE OFFICER REPORTS ROUTE -----
@@ -134,24 +162,28 @@ switch ($page) {
         // Destroy the session cookie too
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $params["path"], $params["domain"],
-                $params["secure"], $params["httponly"]
+            setcookie(
+                session_name(),
+                '',
+                time() - 42000,
+                $params["path"],
+                $params["domain"],
+                $params["secure"],
+                $params["httponly"]
             );
         }
 
         // Destroy the session on server side
         session_destroy();
-        
+
         // Redirect clearly logged out
         header("Location: index.php?page=login&msg=logged_out");
         exit;
         break;
-        
+
     default:
         // http_response_code(404) tells the browser the page was not found.
         http_response_code(404);
         echo "<h1>404 - Page Not Found</h1>";
         break;
 }
-?>

@@ -11,21 +11,40 @@ class Report
         $this->db = $dbConnection;
     }
 
-    /**
-     * Gets total expenses grouped by category for a specific month/year
-     * Used for the Pie Chart
-     */
+    // UPGRADE 5: Get totals (income & expense) for a specific month
+    public function getMonthlyTotals($user_id, $month, $year)
+    {
+        $stmt = $this->db->prepare("
+            SELECT type, SUM(amount) as total
+            FROM transactions
+            WHERE user_id = ? 
+              AND MONTH(transaction_date) = ? 
+              AND YEAR(transaction_date) = ?
+            GROUP BY type
+        ");
+        $stmt->bind_param("iii", $user_id, $month, $year);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        
+        $totals = ['income' => 0, 'expense' => 0];
+        foreach ($result as $row) {
+            $totals[$row['type']] = (float) $row['total'];
+        }
+        return $totals;
+    }
+
+    // UPGRADE 5: Category spending for a specific month (extended)
     public function getSpendingByCategory($user_id, $month, $year)
     {
         $stmt = $this->db->prepare("
-            SELECT c.name as category_name, SUM(t.amount) as total
+            SELECT c.category_id, c.name as category_name, SUM(t.amount) as total
             FROM transactions t
             JOIN categories c ON t.category_id = c.category_id
             WHERE t.user_id = ? 
               AND t.type = 'expense' 
               AND MONTH(t.transaction_date) = ? 
               AND YEAR(t.transaction_date) = ?
-            GROUP BY c.category_id
+            GROUP BY c.category_id, c.name
             ORDER BY total DESC
         ");
         $stmt->bind_param("iii", $user_id, $month, $year);
@@ -33,10 +52,32 @@ class Report
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
-    /**
-     * Gets total expenses grouped by day for a specific month/year
-     * Used for the Line Graph
-     */
+    // UPGRADE 5: 6-month trend data
+    public function getSixMonthTrend($user_id, $endMonth, $endYear)
+    {
+        // Calculate the start date (5 months prior + the end month = 6 months)
+        $endDate = sprintf("%04d-%02d-01", $endYear, $endMonth);
+        $startDate = date("Y-m-01", strtotime("-5 months", strtotime($endDate)));
+        $realEndDate = date("Y-m-t", strtotime($endDate)); // Last day of the end month
+
+        $stmt = $this->db->prepare("
+            SELECT 
+                DATE_FORMAT(transaction_date, '%Y-%m') as month_str,
+                SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as total_income,
+                SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as total_expense
+            FROM transactions
+            WHERE user_id = ? 
+              AND transaction_date >= ? 
+              AND transaction_date <= ?
+            GROUP BY month_str
+            ORDER BY month_str ASC
+        ");
+        
+        $stmt->bind_param("iss", $user_id, $startDate, $realEndDate);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
     public function getDailySpending($user_id, $month, $year)
     {
         $stmt = $this->db->prepare("
@@ -54,13 +95,8 @@ class Report
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
-    /**
-     * Gets all transactions across the entire system.
-     * Used by Finance Officers for auditing and exporting.
-     */
     public function getAllSystemTransactions()
     {
-        // We JOIN users so we know who made the transaction
         $result = $this->db->query("
             SELECT t.transaction_id, t.transaction_date, t.description, t.type, t.amount,
                    c.name as category_name, u.name as user_name, u.email as user_email

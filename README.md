@@ -46,14 +46,18 @@ cd University-Financial-Tracker-App
 ### 2. Configure the Database
 
 **For Windows (XAMPP/WAMP):**
+
 1. Open XAMPP Control Panel and start **Apache** and **MySQL**.
 2. Click **Shell** in XAMPP to open a terminal, then log into MySQL:
+
 ```bash
 mysql -u root
 ```
 
 **For Linux/Mac:**
+
 1. Log into your MariaDB/MySQL console:
+
 ```bash
 sudo mysql -u root -p
 ```
@@ -71,11 +75,13 @@ EXIT;
 
 **For Windows (XAMPP):**
 You can either import `database.sql` directly through **phpMyAdmin** (`http://localhost/phpmyadmin`), or via the XAMPP shell:
+
 ```bash
 mysql -u finance_user -pfinance_pass finance_tracker < database.sql
 ```
 
 **For Linux/Mac:**
+
 ```bash
 mysql -u finance_user -pfinance_pass finance_tracker < database.sql
 ```

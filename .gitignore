@@ -32,3 +32,4 @@ yarn-error.log*
 .env.local
 .env.production
 UFTS_Copilot_Prompt.md
+UFTS_Phase2_Upgrade_Prompt.md

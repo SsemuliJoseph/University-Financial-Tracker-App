@@ -1,15 +1,12 @@
 <?php
 // controllers/BudgetController.php
-// Controller specifically for managing the user's budgets
 
 require_once 'models/Budget.php';
 
 class BudgetController
 {
-
     public function settings()
     {
-        // Enforce session security
         if (!isset($_SESSION['user_id'])) {
             header("Location: index.php?page=login");
             exit;
@@ -19,31 +16,53 @@ class BudgetController
         $budgetModel = new Budget($db);
         $user_id = $_SESSION['user_id'];
 
-        // PHP's date() function gets the current month (1-12) and year (e.g., 2026)
         $month = (int) date('n');
         $year = (int) date('Y');
 
+        // Handle AJAX POST request to update a single category budget
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Check if the budgets array was submitted
-            if (isset($_POST['budgets']) && is_array($_POST['budgets'])) {
-
-                // Loop through each input field. $category_id is the key, $amount is the value
-                foreach ($_POST['budgets'] as $category_id => $amount) {
-                    $category_id = (int) $category_id;
-                    $amount = (int) $amount; // If left empty, becomes 0
-
-                    // Tell the model to save or update it
-                    $budgetModel->setBudget($user_id, $category_id, $amount, $month, $year);
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            if ($input && isset($input['category_id']) && isset($input['amount'])) {
+                $category_id = (int)$input['category_id'];
+                $amount = (int)$input['amount'];
+                
+                $budgetModel->setBudget($user_id, $category_id, $amount, $month, $year);
+                
+                // Return fresh data for this category to update the frontend
+                $budgets = $budgetModel->getBudgetProgress($user_id, $month, $year);
+                $updatedCategory = null;
+                foreach ($budgets as $b) {
+                    if ($b['category_id'] == $category_id) {
+                        $updatedCategory = $b;
+                        break;
+                    }
                 }
-
-                $success = "Budgets updated successfully for this month!";
+                
+                // Calculate overall stats for the top summary
+                $totalBudget = array_sum(array_column($budgets, 'budget_amount'));
+                $totalSpent = array_sum(array_column($budgets, 'spent_amount'));
+                
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'category' => $updatedCategory,
+                    'totalBudget' => $totalBudget,
+                    'totalSpent' => $totalSpent
+                ]);
+                exit;
             }
         }
 
-        // Fetch the fresh budget progress *after* saving updates so the view has the correct numbers
+        // Fetch the fresh budget progress for the normal page load
         $budgets = $budgetModel->getBudgetProgress($user_id, $month, $year);
 
-        // Load the view
+        // Calculate overall totals
+        $overallTotalBudget = array_sum(array_column($budgets, 'budget_amount'));
+        $overallTotalSpent = array_sum(array_column($budgets, 'spent_amount'));
+        
+        $overallPercent = $overallTotalBudget > 0 ? round(($overallTotalSpent / $overallTotalBudget) * 100) : 0;
+        
         require 'views/budgets/settings.php';
     }
 }
