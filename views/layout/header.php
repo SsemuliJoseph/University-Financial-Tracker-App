@@ -9,6 +9,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UFTS - Finance Tracker</title>
+    <!-- PWA Manifest (Upgrade 10) -->
+    <link rel="manifest" href="manifest.json">
     <!-- Bootstrap 5 CSS via CDN for quick styling -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons CDN (Upgrade 1 Requirement) -->
@@ -29,6 +31,12 @@
 </head>
 
 <body class="app-body">
+    <!-- UPGRADE 11: Full Page Loading Overlay -->
+    <div id="pageLoadingOverlay" class="loading-overlay">
+        <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
     <?php if (isset($_SESSION['user_id'])): ?>
         <!-- LOGGED IN USER VIEW - Sidebar Layout -->
         <div class="app-wrapper d-flex" style="min-height: 100vh;">
@@ -61,6 +69,11 @@
                             <i class="bi bi-pie-chart-fill me-3"></i> Reports
                         </a>
                     </li>
+                    <li>
+                        <a href="index.php?page=insights" class="nav-link <?php echo (isset($_GET['page']) && $_GET['page'] == 'insights') ? 'active shadow-sm' : 'sidebar-link hover-lift text-info'; ?>">
+                            <i class="bi bi-lightbulb-fill me-3"></i> Insights
+                        </a>
+                    </li>
 
                     <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'finance_officer'): ?>
                         <hr class="border-secondary opacity-25 my-2">
@@ -83,13 +96,19 @@
                 <!-- User Profile & Logout Bottom Section -->
                 <div class="user-profile-box mt-auto pt-3 border-top border-secondary border-opacity-25 w-100">
                     <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle px-2 py-2 rounded profile-dropdown hover-lift w-100" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-person-circle fs-3 me-3 text-secondary"></i>
+                        <?php if (!empty($_SESSION['avatar'])): ?>
+                            <img src="<?= htmlspecialchars($_SESSION['avatar']) ?>" alt="Avatar" class="rounded-circle me-3" style="width: 36px; height: 36px; object-fit: cover; border: 2px solid rgba(255,255,255,0.1);">
+                        <?php else: ?>
+                            <i class="bi bi-person-circle fs-3 me-3 text-secondary"></i>
+                        <?php endif; ?>
                         <div class="overflow-hidden">
                             <strong class="d-block lh-1 text-truncate" style="color: white;"><?= htmlspecialchars($_SESSION['name']) ?></strong>
                             <small class="text-secondary d-block mt-1 text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;"><?= htmlspecialchars($_SESSION['role']) ?></small>
                         </div>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark text-small shadow-lg w-100 mt-2 rounded-3 border-0" aria-labelledby="dropdownUser">
+                        <li><a class="dropdown-item py-2 fw-semibold" href="index.php?page=profile"><i class="bi bi-person me-3"></i>Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger py-2 fw-semibold" href="index.php?page=logout"><i class="bi bi-box-arrow-right me-3"></i>Logout</a></li>
                     </ul>
                 </div>
@@ -102,7 +121,7 @@
                 <header class="topbar sticky-top d-flex justify-content-between align-items-center p-3 shadow-sm bg-body">
                     <div class="d-flex align-items-center">
                         <!-- Mobile sidebar toggle -->
-                        <button class="btn btn-outline-secondary border-0 d-md-none me-3 shadow-sm hover-lift" id="sidebarToggle">
+                        <button class="btn btn-outline-secondary border-0 d-none me-3 shadow-sm hover-lift" id="sidebarToggle">
                             <i class="bi bi-list fs-4"></i>
                         </button>
                         <h4 class="m-0 d-inline-block fw-bold text-body-emphasis tracking-tight">
@@ -123,6 +142,11 @@
                         </h4>
                     </div>
                     <div class="d-flex align-items-center gap-2 gap-md-3">
+
+                        <!-- UPGRADE 10: Install App PWA Button -->
+                        <button id="installPwaBtn" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm hover-lift d-none fw-semibold">
+                            <i class="bi bi-download me-1"></i> <span class="d-none d-sm-inline">Install App</span>
+                        </button>
 
                         <!-- UPGRADE 7: Real-Time Notification Bell -->
                         <div class="dropdown">
