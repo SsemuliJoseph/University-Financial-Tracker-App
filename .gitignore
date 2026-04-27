@@ -33,3 +33,7 @@ yarn-error.log*
 .env.production
 UFTS_Copilot_Prompt.md
 UFTS_Phase2_Upgrade_Prompt.md
+public/uploads/avatars/*
+!public/uploads/avatars/.gitkeep
+*Prompt*.md
+UFTS_*.md

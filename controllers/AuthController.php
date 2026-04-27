@@ -22,6 +22,7 @@ class AuthController
             $email = trim($_POST['email']);
             $password = $_POST['password'];
             $password_confirm = $_POST['password_confirm'];
+            $role = isset($_POST['role']) ? $_POST['role'] : 'student';
 
             // Validation 1: Do passwords match?
             if ($password !== $password_confirm) {
@@ -32,7 +33,7 @@ class AuthController
                 $error = "An account with this email already exists.";
             } else {
                 // Try to create the user via the Model
-                if ($userModel->create($name, $email, $password, 'student')) {
+                if ($userModel->create($name, $email, $password, $role)) {
                     $success = "Registration successful! You can now login.";
                     // We successfully registered, so we'll intentionally empty POST so the form clears
                     $_POST = [];
@@ -52,7 +53,7 @@ class AuthController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db = getConnection();
             $userModel = new User($db);
-            
+
             $email = trim($_POST['email']);
             $password = $_POST['password'];
 
@@ -61,7 +62,8 @@ class AuthController
                 if ($userCheck['locked_until'] !== null && strtotime($userCheck['locked_until']) > time()) {
                     $minutesLeft = ceil((strtotime($userCheck['locked_until']) - time()) / 60);
                     $error = "Account locked. Try again in $minutesLeft minute(s).";
-                    require 'views/auth/login.php'; return;
+                    require 'views/auth/login.php';
+                    return;
                 }
                 $user = $userModel->login($email, $password);
                 if ($user !== false) {
@@ -77,7 +79,8 @@ class AuthController
                         $userModel->updateRememberToken($user['user_id'], $token);
                         setcookie('remember_me', $token, time() + (86400 * 30), "/");
                     }
-                    header("Location: index.php?page=dashboard"); exit;
+                    header("Location: index.php?page=dashboard");
+                    exit;
                 } else {
                     $userModel->incrementFailedAttempts($email);
                     $attempts = $userCheck['failed_attempts'] + 1;
@@ -98,12 +101,18 @@ class AuthController
 
     public function profile()
     {
-        if (!isset($_SESSION['user_id'])) { header("Location: index.php?page=login"); exit; }
-        $db = getConnection(); $userModel = new User($db);
+        if (!isset($_SESSION['user_id'])) {
+            header("Location: index.php?page=login");
+            exit;
+        }
+        $db = getConnection();
+        $userModel = new User($db);
         $user = $userModel->getById($_SESSION['user_id']);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($_POST['update_profile'])) {
-                $name = trim($_POST['name']); $currency = trim($_POST['currency']); $avatar = $user['avatar'];
+                $name = trim($_POST['name']);
+                $currency = trim($_POST['currency']);
+                $avatar = $user['avatar'];
                 if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
                     if (!is_dir('public/uploads/avatars')) mkdir('public/uploads/avatars', 0777, true);
                     $ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
@@ -113,8 +122,11 @@ class AuthController
                     }
                 }
                 if ($userModel->updateProfile($_SESSION['user_id'], $name, $currency, $avatar)) {
-                    $_SESSION['name'] = $name; $_SESSION['currency'] = $currency; $_SESSION['avatar'] = $avatar;
-                    $success = "Profile updated!"; $user = $userModel->getById($_SESSION['user_id']);
+                    $_SESSION['name'] = $name;
+                    $_SESSION['currency'] = $currency;
+                    $_SESSION['avatar'] = $avatar;
+                    $success = "Profile updated!";
+                    $user = $userModel->getById($_SESSION['user_id']);
                 } else $error = "Failed to update profile.";
             }
             if (isset($_POST['update_password'])) {

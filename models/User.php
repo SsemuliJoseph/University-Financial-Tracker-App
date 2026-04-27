@@ -55,6 +55,72 @@ class User
      * Attempts to log a user in. 
      * Returns an array of user data on success, or false on failure.
      */
+    public function getByEmail($email) {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res->num_rows === 1 ? $res->fetch_assoc() : false;
+    }
+
+    public function getById($id) {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE user_id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res->num_rows === 1 ? $res->fetch_assoc() : false;
+    }
+
+    public function incrementFailedAttempts($email) {
+        $stmt = $this->db->prepare("UPDATE users SET failed_attempts = failed_attempts + 1 WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+    }
+
+    public function lockAccount($email) {
+        $stmt = $this->db->prepare("UPDATE users SET locked_until = DATE_ADD(NOW(), INTERVAL 10 MINUTE) WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+    }
+
+    public function resetFailedAttempts($email) {
+        $stmt = $this->db->prepare("UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+    }
+    
+    public function updateRememberToken($id, $token) {
+        $stmt = $this->db->prepare("UPDATE users SET remember_token = ? WHERE user_id = ?");
+        $stmt->bind_param("si", $token, $id);
+        $stmt->execute();
+    }
+
+    public function getByRememberToken($token) {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE remember_token = ?");
+        $stmt->bind_param("s", $token);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res->num_rows === 1 ? $res->fetch_assoc() : false;
+    }
+    
+    public function updateProfile($id, $name, $currency, $avatar = null) {
+        if ($avatar !== null) {
+            $stmt = $this->db->prepare("UPDATE users SET name = ?, currency = ?, avatar = ? WHERE user_id = ?");
+            $stmt->bind_param("sssi", $name, $currency, $avatar, $id);
+        } else {
+            $stmt = $this->db->prepare("UPDATE users SET name = ?, currency = ? WHERE user_id = ?");
+            $stmt->bind_param("ssi", $name, $currency, $id);
+        }
+        return $stmt->execute();
+    }
+    
+    public function updatePassword($id, $new_password) {
+        $hashed = password_hash($new_password, PASSWORD_BCRYPT);
+        $stmt = $this->db->prepare("UPDATE users SET password = ? WHERE user_id = ?");
+        $stmt->bind_param("si", $hashed, $id);
+        return $stmt->execute();
+    }
+
     public function login($email, $password)
     {
         // Fetch the user by their email

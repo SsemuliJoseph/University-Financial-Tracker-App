@@ -3,8 +3,8 @@
 include 'views/layout/header.php';
 ?>
 
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6">
+<div class="row justify-content-center mt-3 mt-md-5">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-6">
         <div class="card shadow">
             <div class="card-header bg-primary text-white">
                 <h4>System Login</h4>
@@ -30,6 +30,12 @@ include 'views/layout/header.php';
                         <label>Password</label>
                         <input type="password" name="password" class="form-control" required>
                     </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" name="remember_me" id="rememberMe">
+                        <label class="form-check-label" for="rememberMe">Remember me</label>
+                    </div>
+
 
                     <button type="submit" class="btn btn-primary w-100">Login</button>
                 </form>

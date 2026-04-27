@@ -15,8 +15,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons CDN (Upgrade 1 Requirement) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Custom CSS (Upgrade 1 Requirement) -->
-    <link href="public/css/style.css" rel="stylesheet">
+    <!-- Custom CSS (Upgrade 1 Requirement) with Cache Busting -->
+    <link href="public/css/style.css?v=<?= time() ?>" rel="stylesheet">
 
     <!-- Script to set dark theme instantly on load to avoid white flash -->
     <script>
@@ -37,6 +37,10 @@
             <span class="visually-hidden">Loading...</span>
         </div>
     </div>
+
+    <!-- Mobile Backdrop -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop d-md-none"></div>
+
     <?php if (isset($_SESSION['user_id'])): ?>
         <!-- LOGGED IN USER VIEW - Sidebar Layout -->
         <div class="app-wrapper d-flex" style="min-height: 100vh;">
@@ -107,10 +111,11 @@
                         </div>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark text-small shadow-lg w-100 mt-2 rounded-3 border-0" aria-labelledby="dropdownUser">
-                        <li><a class="dropdown-item py-2 fw-semibold" href="index.php?page=profile"><i class="bi bi-person me-3"></i>Profile</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger py-2 fw-semibold" href="index.php?page=logout"><i class="bi bi-box-arrow-right me-3"></i>Logout</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="index.php?page=profile"><i class="bi bi-person me-3"></i>Profile Settings</a></li>
                     </ul>
+                    <a href="index.php?page=logout" class="btn btn-outline-danger w-100 mt-3 d-flex justify-content-center align-items-center fw-bold shadow-sm rounded-3">
+                        <i class="bi bi-box-arrow-right me-2"></i> Logout
+                    </a>
                 </div>
             </aside>
 
@@ -120,11 +125,11 @@
                 <!-- Topbar (Upgrade 1 Requirement) -->
                 <header class="topbar sticky-top d-flex justify-content-between align-items-center p-3 shadow-sm bg-body">
                     <div class="d-flex align-items-center">
-                        <!-- Mobile sidebar toggle -->
-                        <button class="btn btn-outline-secondary border-0 d-none me-3 shadow-sm hover-lift" id="sidebarToggle">
+                        <!-- Sidebar toggle (Mobile & Desktop) -->
+                        <button class="btn btn-outline-secondary border-0 me-3 shadow-sm hover-lift" id="sidebarToggle">
                             <i class="bi bi-list fs-4"></i>
                         </button>
-                        <h4 class="m-0 d-inline-block fw-bold text-body-emphasis tracking-tight">
+                        <h4 class="m-0 d-none d-sm-inline-block d-md-inline-block fw-bold text-body-emphasis tracking-tight text-truncate" style="max-width: 250px;">
                             <?php
                             // Quick logic to get current page name for top bar
                             $p = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
@@ -185,34 +190,24 @@
                 <?php else: ?>
 
                     <!-- GUEST NAVBAR -->
-                    <nav class="navbar navbar-expand-lg shadow-sm bg-body py-3 sticky-top">
-                        <div class="container">
-                            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.php">
+                    <nav class="navbar shadow-sm bg-body py-3 sticky-top">
+                        <div class="container d-flex justify-content-between align-items-center flex-nowrap">
+                            <a class="navbar-brand fw-bold d-flex align-items-center gap-2 m-0" href="index.php">
                                 <i class="bi bi-wallet2 fs-3 text-success"></i>
-                                <span class="tracking-wide">UFTS</span>
+                                <span class="tracking-wide d-none d-sm-inline">UFTS</span>
                             </a>
 
-                            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#guestNav">
-                                <span class="navbar-toggler-icon"></span>
-                            </button>
+                            <!-- Actions visible immediately on mobile and desktop -->
+                            <div class="d-flex align-items-center gap-2 gap-md-3">
+                                <!-- Guest Dark Mode Toggle (Desktop only or optional) -->
+                                <button id="themeToggleBtnGuest" class="btn btn-outline-secondary rounded-circle shadow-sm border-0 bg-body-tertiary hover-lift d-none d-md-flex align-items-center justify-content-center" style="width:40px; height:40px;">
+                                    <i class="bi bi-moon-stars-fill" id="themeIconGuest"></i>
+                                </button>
 
-                            <div class="collapse navbar-collapse" id="guestNav">
-                                <ul class="navbar-nav ms-auto align-items-center gap-2">
-                                    <li class="nav-item me-3 d-none d-lg-block">
-                                        <!-- Guest Dark Mode Toggle -->
-                                        <button id="themeToggleBtnGuest" class="btn btn-outline-secondary rounded-circle shadow-sm border-0 bg-body-tertiary hover-lift" style="width:40px; height:40px;">
-                                            <i class="bi bi-moon-stars-fill" id="themeIconGuest"></i>
-                                        </button>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link fw-semibold hover-lift" href="index.php?page=login">Login</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="btn btn-primary rounded-pill px-4 shadow-sm hover-lift fw-bold" href="index.php?page=register">Create Account</a>
-                                    </li>
-                                </ul>
+                                <a class="btn btn-link text-decoration-none fw-semibold hover-lift text-body px-2 px-md-3" href="index.php?page=login">Login</a>
+                                <a class="btn btn-primary rounded-pill px-3 px-md-4 shadow-sm hover-lift fw-bold" href="index.php?page=register">Register</a>
                             </div>
                         </div>
                     </nav>
-                    <div class="container animate-fade-in mt-5">
+                    <div class="container animate-fade-in mt-4 mt-md-5">
                     <?php endif; ?>

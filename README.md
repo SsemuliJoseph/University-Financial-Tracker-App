@@ -1,24 +1,35 @@
-# University Finance Tracker System (UFTS)
+# University Finance Tracker System (UFTS) 🚀
 
 A strict MVC web application built on the LAMP stack (Linux, Apache, MySQL/MariaDB, PHP) designed to help university students and faculty track and manage their finances.
 
-## 🚀 Features
+**Recently upgraded to Phase 2**, transforming a core PHP framework into a polished, modern, highly interactive Progressive Web App (PWA) without relying on heavy JavaScript frameworks like React or Node.js.
 
-- **Secure Authentication:** Registration and Login with bcrypt password hashing.
-- **Role-Based Access Control (RBAC):** Distinct roles for `student`, `admin`, and `finance_officer`.
-- **Dashboard:** At-a-glance view of current balance, recent transactions, and spending progress.
+## ✨ Features
+
+### Phase 1: Core Foundation
+
+- **Secure Authentication:** Registration and Login with bcrypt password hashing and RBAC (`student`, `admin`, `finance_officer`).
 - **Transaction Management:** Full CRUD (Create, Read, Update, Delete) operations for incomes and expenses.
-- **Budget Tracking:** Set monthly limits and visually track spending progress.
-- **Analytical Reports:** Interactive pie and line charts using Chart.js.
-- **Admin Panel:** User management interface (change roles, delete accounts).
-- **Finance Officer View:** Read-only system-wide transaction data with CSV export functionality.
+- **Analytical Reports & Budgets:** Track monthly spending limits and visually analyze data using Chart.js.
+- **Admin & Finance Panels:** Manage users, system-wide data, and export records to CSV.
 
-## 🛠️ Tech Stack
+### Phase 2: Modernization & UX Upgrades (Recent Additions)
 
-- **Backend:** PHP 8.4
-- **Database:** MariaDB / MySQL
-- **Frontend:** HTML5, CSS3, Vanilla Javascript, Bootstrap 5 (CDN)
-- **Architecture:** Custom MVC (Model-View-Controller)
+- **🎨 Complete Visual Redesign:** Fixed dark-mode sidebar layout with Bootstrap Icons, smooth `fade-in` transitions, and interactive hover effects. Preference saved in `localStorage`.
+- **📊 Dynamic Dashboard:** 4 summary cards featuring animated Count-Up numbers, real-time progress bars for budget health, and interactive activity feeds.
+- **🔍 Advanced Data Tables:** Filter (by category, type, date range), live search without reload, sortable column headers, pagination, and bulk row deletion.
+- **📱 Progressive Web App (PWA):** Fully installable on mobile/desktop via `manifest.json`. Offline caching powered by a custom Service Worker (`sw.js`).
+- **⚡ Performance & UX Polish:** AJAX-powered inline budget editing, loading skeleton screens, toast notifications, keyboard shortcuts (`N` for new, `D` for dashboard), and JS Polling for real-time notification bells.
+- **🧠 Smart Insights Engine:** Pure PHP-generated personalized financial insights, spending pattern detection, and streak tracking.
+- **🔐 Security Enhancements:** Profile avatars, preferred currency settings (e.g., UGX, GBP, USD), secure password updates, rate-limited login attempts (lockout after 5 fails), and persistent "Remember Me" cookies.
+
+## 🛠️ Tech Stack & Architecture
+
+- **Backend:** PHP 8.4 (Custom MVC Architecture, PRG Pattern)
+- **Database:** MariaDB / MySQL (Optimized relational schema)
+- **Frontend:** HTML5, CSS3, Vanilla JavaScript (ES6+), Bootstrap 5.3 (via CDN)
+- **Data Visualization:** Chart.js (via CDN)
+- **Zero Build Tools:** No npm, Node.js, Webpack, or frontend build steps required. Everything runs natively on a standard LAMP stack.
 
 ## 📁 Project Structure
 
@@ -26,15 +37,19 @@ A strict MVC web application built on the LAMP stack (Linux, Apache, MySQL/Maria
 /
 ├── config/          # Database connection settings
 ├── controllers/     # Application logic and routing handlers
-├── database/        # Database schema files
+├── database/        # schema.sql (Run this to set up tables)
 ├── models/          # Data and database interaction layer
-├── public/          # Static assets (CSS, JS, Images)
-├── views/           # HTML templates and UI components
-├── index.php        # Main application entry point and router
+├── public/          # Static assets (CSS, JS, avatars, icons)
+├── views/           # HTML templates, modals, and UI components
+├── index.php        # Main application entry point and MVC router
+├── manifest.json    # PWA Web Manifest
+├── sw.js            # PWA Service Worker for offline caching
 └── README.md        # Project documentation
 ```
 
-## ⚙️ Local Development Setup (For Collaborators)
+## ⚙️ How to Run the Project Locally
+
+Follow these steps to get the finance-tracker app running on your local machine.
 
 ### 1. Clone the repository
 
@@ -43,26 +58,20 @@ git clone git@github.com:SsemuliJoseph/University-Financial-Tracker-App.git
 cd University-Financial-Tracker-App
 ```
 
+_(Or navigate to your existing project folder e.g., `/var/www/html/finance-tracker`)_
+
 ### 2. Configure the Database
 
 **For Windows (XAMPP/WAMP):**
 
 1. Open XAMPP Control Panel and start **Apache** and **MySQL**.
-2. Click **Shell** in XAMPP to open a terminal, then log into MySQL:
-
-```bash
-mysql -u root
-```
+2. Click **Shell** in XAMPP to open a terminal, then log into MySQL: `mysql -u root`
 
 **For Linux/Mac:**
 
-1. Log into your MariaDB/MySQL console:
+1. Log into your MariaDB/MySQL console: `sudo mysql -u root -p`
 
-```bash
-sudo mysql -u root -p
-```
-
-2. Create the database and user (Run this in the MySQL console for both OS):
+**Create the database and user (Run inside MySQL console):**
 
 ```sql
 CREATE DATABASE IF NOT EXISTS finance_tracker;
@@ -71,38 +80,55 @@ FLUSH PRIVILEGES;
 EXIT;
 ```
 
-3. Import the database schema:
+**Import the database schema:**
 
-**For Windows (XAMPP):**
-You can either import `database.sql` directly through **phpMyAdmin** (`http://localhost/phpmyadmin`), or via the XAMPP shell:
+- _Linux/Mac / Windows Shell:_ `mysql -u finance_user -pfinance_pass finance_tracker < database.sql`
+- _Alternative:_ Open phpMyAdmin and import the `database.sql` file manually.
+
+### 3. Start the Web Server
+
+**Option A: Using PHP Built-in Server (Quickest method)**
+Open a terminal in the project root directory and run:
 
 ```bash
-mysql -u finance_user -pfinance_pass finance_tracker < database.sql
+php -S localhost:8000
 ```
 
-**For Linux/Mac:**
+Then open your browser and go to: `http://localhost:8000`
 
-```bash
-mysql -u finance_user -pfinance_pass finance_tracker < database.sql
-```
+**Option B: Using Apache/Nginx (XAMPP/LAMP)**
 
-### 3. Server Configuration
+- **Windows:** Ensure the project folder is inside your XAMPP `htdocs` folder (e.g., `C:\xampp\htdocs\finance-tracker`).
+- **Linux/Mac:** Ensure the project is in your web root (e.g., `/var/www/html/finance-tracker`).
+- Ensure the `mysqli` or `pdo_mysql` extension is enabled in your `php.ini`.
+- Navigate to your local server in your web browser (e.g., `http://localhost/finance-tracker/`).
 
-**For Windows:**
-Ensure you cloned the repository into your XAMPP `htdocs` folder (e.g., `C:\xampp\htdocs\University-Financial-Tracker-App`).
+## 🤝 How to Contribute
 
-**For Linux/Mac:**
-Ensure your local Apache or Nginx server points to the project root directory (e.g., `/var/www/html/University-Financial-Tracker-App`).
+We welcome contributions! Please follow this workflow to ensure code quality and prevent merge conflicts:
 
-Navigate to your local server (e.g., `http://localhost/University-Financial-Tracker-App/` or `http://localhost/finance-tracker/`) in your web browser.
-
-## 🤝 Collaborating
-
-1. **Pull the latest changes** before starting work: `git pull origin main`
-2. **Create a feature branch:** `git checkout -b feature/your-feature-name`
-3. **Commit your changes:** `git commit -m "Add some feature"`
-4. **Push to the branch:** `git push origin feature/your-feature-name`
-5. **Open a Pull Request** on GitHub for review.
+1. **Sync your fork:** Always pull the latest main branch before starting work:
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
+2. **Create a feature branch:** Name it clearly based on what you are building.
+   ```bash
+   git checkout -b feature/your-feature-name
+   # or for bugfixes: git checkout -b fix/issue-name
+   ```
+3. **Follow the Architecture:**
+   - Keep SQL queries strictly inside the `models/` directory.
+   - Keep business logic and POST handling in the `controllers/`.
+   - Keep pure HTML/UI inside `views/`. Do not echo HTML from controllers.
+4. **Commit your changes:** Write clear, descriptive commit messages.
+   ```bash
+   git commit -m "feat: implement inline editing for budgets"
+   ```
+5. **Push and PR:** Push to your branch and open a Pull Request on GitHub for review.
+   ```bash
+   git push origin feature/your-feature-name
+   ```
 
 ## 📝 License
 

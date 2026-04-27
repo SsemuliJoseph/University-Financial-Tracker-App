@@ -37,10 +37,12 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'home';
 // For now, let's just make sure the basics work and prove routing is functional.
 switch ($page) {
     case 'home':
-        echo "<h1>Welcome to UFTS!</h1>";
-        echo "<p>Your entry point is working successfully.</p>";
-        echo "<a href='index.php?page=test_db'>Test Database Connection</a>";
-        break;
+        if (isset($_SESSION['user_id'])) {
+            header('Location: index.php?page=dashboard');
+        } else {
+            header('Location: index.php?page=login');
+        }
+        exit;
 
     case 'test_db':
         // Let's test if our connection works!
@@ -195,7 +197,7 @@ switch ($page) {
         if (isset($_COOKIE['remember_me'])) {
             setcookie('remember_me', '', time() - 3600, '/');
         }
-        
+
         // Destroy the session variables
         $_SESSION = array();
 

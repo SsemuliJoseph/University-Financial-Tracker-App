@@ -4,6 +4,30 @@
 ?>
 </div> <!-- Close Main Container -->
 <?php if (isset($_SESSION['user_id'])): ?>
+
+    <!-- Mobile Bottom Tab Bar (Upgrade 9) -->
+    <nav class="bottom-tab-bar d-md-none">
+        <a href="index.php?page=dashboard" class="nav-link <?php echo (!isset($_GET['page']) || $_GET['page'] == 'dashboard') ? 'active' : ''; ?>">
+            <i class="bi bi-grid-1x2-fill"></i>
+            <span>Home</span>
+        </a>
+        <a href="index.php?page=transactions" class="nav-link <?php echo (isset($_GET['page']) && $_GET['page'] == 'transactions') ? 'active' : ''; ?>">
+            <i class="bi bi-card-list"></i>
+            <span>Transact</span>
+        </a>
+        <a href="index.php?page=transaction_add" class="nav-link fab-button">
+            <i class="bi bi-plus-lg"></i>
+        </a>
+        <a href="index.php?page=budget_settings" class="nav-link <?php echo (isset($_GET['page']) && $_GET['page'] == 'budget_settings') ? 'active' : ''; ?>">
+            <i class="bi bi-piggy-bank"></i>
+            <span>Budget</span>
+        </a>
+        <a href="index.php?page=reports" class="nav-link <?php echo (isset($_GET['page']) && $_GET['page'] == 'reports') ? 'active' : ''; ?>">
+            <i class="bi bi-pie-chart-fill"></i>
+            <span>Reports</span>
+        </a>
+    </nav>
+
     </main> <!-- Close .main-content -->
     </div> <!-- Close .app-wrapper -->
 <?php endif; ?>
@@ -53,13 +77,36 @@
             }
         });
 
-        // Mobile Sidebar Toggle Script
+        // Sidebar Toggle Script (Mobile & Desktop)
         const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebar = document.getElementById('sidebar');
-        if (sidebarToggle && sidebar) {
-            sidebarToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('show-mobile');
-            });
+        const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+        function toggleSidebar() {
+            if (sidebar) {
+                if (window.innerWidth <= 768) {
+                    // Mobile slide behavior
+                    sidebar.classList.toggle('show-mobile');
+                    if (sidebarBackdrop) {
+                        if (sidebar.classList.contains('show-mobile')) {
+                            sidebarBackdrop.classList.add('show');
+                        } else {
+                            sidebarBackdrop.classList.remove('show');
+                        }
+                    }
+                } else {
+                    // Desktop collapse behavior
+                    sidebar.classList.toggle('collapsed');
+                }
+            }
+        }
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', toggleSidebar);
+        }
+
+        if (sidebarBackdrop) {
+            sidebarBackdrop.addEventListener('click', toggleSidebar);
         }
 
         // UPGRADE 7: Real-Time Notification Polling
@@ -173,6 +220,258 @@
     });
 </script>
 
+
+<!-- UPGRADE 10: Progressive Web App Scripts -->
+<script>
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/finance-tracker/sw.js')
+                .then(registration => {
+                    console.log('SW registered: ', registration);
+                }).catch(registrationError => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+        });
+    }
+
+    // PWA Install Button Logic
+    let deferredPrompt;
+    const installBtn = document.getElementById('installPwaBtn');
+
+    if (installBtn) {
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            // Update UI to notify the user they can add to home screen
+            installBtn.classList.remove('d-none');
+        });
+
+        installBtn.addEventListener('click', (e) => {
+            // Hide our user interface that shows our A2HS button
+            installBtn.classList.add('d-none');
+            // Show the prompt
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the A2HS prompt');
+                    } else {
+                        console.log('User dismissed the A2HS prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        });
+
+        // Hide button once installed
+        window.addEventListener('appinstalled', (evt) => {
+            installBtn.classList.add('d-none');
+            console.log('UFTS was installed');
+        });
+    }
+</script>
+
+
+<!-- UPGRADE 11: Performance & UX Polish JS -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. Loading Spinner Overlay
+        const overlay = document.getElementById('pageLoadingOverlay');
+        if (overlay) {
+            // Small delay to ensure smooth transition
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                overlay.style.display = 'none';
+            }, 150);
+        }
+
+        // 2. Dashboard Skeletons
+        const skeletons = document.querySelectorAll('.skeleton');
+        if (skeletons.length > 0) {
+            setTimeout(() => {
+                skeletons.forEach(el => el.classList.remove('skeleton'));
+            }, 600); // Reveal after 600ms to simulate data load feeling
+        }
+
+        // 3. Form Submit Buttons Loading State
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    // To submit natively after disabling, wait a tick
+                    setTimeout(() => {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Saving...';
+                    }, 10);
+                }
+            });
+        });
+
+        // 4. Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ignore if user is typing in an input or textarea
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT' || e.target.isContentEditable) {
+                return;
+            }
+
+            // Only trigger if no modifier keys are pressed
+            if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
+
+            const key = e.key.toLowerCase();
+            if (key === 'n') {
+                e.preventDefault();
+                window.location.href = 'index.php?page=transaction_add';
+            } else if (key === 'd') {
+                e.preventDefault();
+                window.location.href = 'index.php?page=dashboard';
+            } else if (key === 'r') {
+                e.preventDefault();
+                window.location.href = 'index.php?page=reports';
+            }
+        });
+    });
+</script>
+
+<!-- UPGRADE 11: Performance & UX Polish JS -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. Loading Spinner Overlay
+        const overlay = document.getElementById('pageLoadingOverlay');
+        if (overlay) {
+            // Small delay to ensure smooth transition
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                overlay.style.display = 'none';
+            }, 150);
+        }
+
+        // 2. Dashboard Skeletons
+        const skeletons = document.querySelectorAll('.skeleton');
+        if (skeletons.length > 0) {
+            setTimeout(() => {
+                skeletons.forEach(el => el.classList.remove('skeleton'));
+            }, 600); // Reveal after 600ms to simulate data load feeling
+        }
+
+        // 3. Form Submit Buttons Loading State
+        const formSubmitters = document.querySelectorAll('button[type="submit"]');
+        formSubmitters.forEach(btn => {
+            btn.closest('form').addEventListener('submit', function() {
+                setTimeout(() => {
+                    btn.disabled = true;
+                    const orig = btn.innerHTML;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Saving...';
+                    // Reset state after a short while so it doesnt stay stuck on validation failure.
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = orig;
+                    }, 4000);
+                }, 10);
+            });
+        });
+
+        // 4. Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                return;
+            }
+            if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
+
+            const key = e.key.toLowerCase();
+            if (key === 'n') {
+                e.preventDefault();
+                window.location.href = 'index.php?page=transaction_add';
+            } else if (key === 'd') {
+                e.preventDefault();
+                window.location.href = 'index.php?page=dashboard';
+            } else if (key === 'r') {
+                e.preventDefault();
+                window.location.href = 'index.php?page=reports';
+            }
+        });
+    });
+</script>
+
+<!-- UPGRADE 11: Performance & UX Polish JS -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. Loading Spinner Overlay
+        const overlay = document.getElementById('pageLoadingOverlay');
+        if (overlay) {
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                overlay.style.display = 'none';
+            }, 150);
+        }
+
+        // 2. Dashboard Skeletons
+        const skeletons = document.querySelectorAll('.skeleton');
+        if (skeletons.length > 0) {
+            setTimeout(() => {
+                skeletons.forEach(el => el.classList.remove('skeleton'));
+            }, 600); // Reveal after 600ms
+        }
+
+        // 3. Form Submit Buttons Loading State
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function() {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    setTimeout(() => {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Saving...';
+                    }, 10);
+                }
+            });
+        });
+
+        // 4. Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                return;
+            }
+            if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
+
+            const key = e.key.toLowerCase();
+            if (key === 'n') {
+                e.preventDefault();
+                window.location.href = 'index.php?page=transaction_add';
+            } else if (key === 'd') {
+                e.preventDefault();
+                window.location.href = 'index.php?page=dashboard';
+            } else if (key === 'r') {
+                e.preventDefault();
+                window.location.href = 'index.php?page=reports';
+            }
+        });
+    });
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Find all alerts with the 'alert-dismissible' class
+        const alerts = document.querySelectorAll('.alert-dismissible');
+
+        if (alerts.length > 0) {
+            // Wait 5 seconds (5000ms), then close them
+            setTimeout(function() {
+                alerts.forEach(function(alertNode) {
+                    // Use Bootstrap's Alert instance to properly close and animate the dismissal
+                    const alertInstance = new bootstrap.Alert(alertNode);
+                    alertInstance.close();
+                });
+            }, 5000);
+        }
+    });
+</script>
+
 </body>
+
+</html>
 
 </html>
