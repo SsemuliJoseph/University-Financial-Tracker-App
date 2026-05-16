@@ -3,6 +3,7 @@
 
 require_once 'models/Insight.php';
 require_once 'models/Budget.php';
+require_once 'models/Cache.php';
 
 class InsightController
 {
@@ -17,6 +18,7 @@ class InsightController
         $db = getConnection();
         $insightModel = new Insight($db);
         $budgetModel = new Budget($db);
+        $cache = new Cache();
         $user_id = $_SESSION['user_id'];
 
         $currentMonth = (int)date('n');

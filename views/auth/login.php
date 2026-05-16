@@ -19,25 +19,28 @@ include 'views/layout/header.php';
                     <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
                 <?php endif; ?>
 
-                <!-- The form submits a POST request to ?page=login -->
-                <form action="index.php?page=login" method="POST">
+                <form action="index.php?page=login" method="POST" role="form" aria-labelledby="login-heading">
                     <div class="mb-3">
-                        <label>Email Address</label>
-                        <input type="email" name="email" class="form-control" required
-                            value="<?= isset($_POST['email']) ? htmlspecialchars($_POST['email']) : '' ?>">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" name="email" id="email" class="form-control" required
+                            value="<?= isset($_POST['email']) ? htmlspecialchars($_POST['email']) : '' ?>" aria-describedby="email-help">
+                        <div id="email-help" class="form-text">Enter your registered email address.</div>
                     </div>
                     <div class="mb-3">
-                        <label>Password</label>
-                        <input type="password" name="password" class="form-control" required>
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" name="password" id="password" class="form-control" required aria-describedby="password-help">
+                        <div id="password-help" class="form-text">Enter your password.</div>
                     </div>
 
                     <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" name="remember_me" id="rememberMe">
+                        <input type="checkbox" class="form-check-input" name="remember_me" id="rememberMe" aria-describedby="remember-help">
                         <label class="form-check-label" for="rememberMe">Remember me</label>
+                        <div id="remember-help" class="form-text">Keep me logged in for 30 days.</div>
                     </div>
 
 
-                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                    <button type="submit" class="btn btn-primary w-100" aria-describedby="login-button-help">Login</button>
+                    <div id="login-button-help" class="form-text text-center">Click to sign in to your account.</div>
                 </form>
             </div>
             <div class="card-footer text-center">

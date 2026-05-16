@@ -3,6 +3,7 @@
 // Prepares data for the reports view and handles AJAX JSON responses
 
 require_once 'models/Report.php';
+require_once 'models/Cache.php';
 
 class ReportController
 {
@@ -15,6 +16,7 @@ class ReportController
 
         $db = getConnection();
         $reportModel = new Report($db);
+        $cache = new Cache();
         $user_id = $_SESSION['user_id'];
 
         // Get requested month/year or default to current
@@ -37,11 +39,35 @@ class ReportController
         $prevYear = (int)$prevParts[0];
         $prevMonth = (int)$prevParts[1];
 
-        // 1. Fetch current month category spending
-        $categoryData = $reportModel->getSpendingByCategory($user_id, $month, $year);
+        $cacheKey = "report_{$user_id}_{$year}_{$month}";
+        $cachedData = $cache->get($cacheKey);
 
-        // 2. Fetch previous month category spending for comparisons
-        $prevCategoryData = $reportModel->getSpendingByCategory($user_id, $prevMonth, $prevYear);
+        if ($cachedData) {
+            $categoryData = $cachedData['categoryData'];
+            $prevCategoryData = $cachedData['prevCategoryData'];
+            $sixMonthTrend = $cachedData['sixMonthTrend'];
+            $totals = $cachedData['totals'];
+        } else {
+            // 1. Fetch current month category spending
+            $categoryData = $reportModel->getSpendingByCategory($user_id, $month, $year);
+
+            // 2. Fetch previous month category spending for comparisons
+            $prevCategoryData = $reportModel->getSpendingByCategory($user_id, $prevMonth, $prevYear);
+
+            // 3. Fetch 6 month trend
+            $sixMonthTrend = $reportModel->getSixMonthTrend($user_id, $month, $year);
+
+            // 4. Fetch the Totals for Health Score
+            $totals = $reportModel->getMonthlyTotals($user_id, $month, $year);
+
+            // Cache the data
+            $cache->set($cacheKey, [
+                'categoryData' => $categoryData,
+                'prevCategoryData' => $prevCategoryData,
+                'sixMonthTrend' => $sixMonthTrend,
+                'totals' => $totals
+            ]);
+        }
 
         // Convert previous data to simple associative array: ['Food' => 5000]
         $prevCatMap = [];
